@@ -14,6 +14,7 @@ from torch.optim import Adam
 from torchvision import transforms, utils
 from PIL import Image
 
+
 from tqdm import tqdm
 from einops import rearrange
 
@@ -294,7 +295,7 @@ def cosine_beta_schedule(timesteps, s = 0.008):
     """
     steps = timesteps + 1
     x = torch.linspace(0, steps, steps)
-    alphas_cumprod = torch.cos(((x / steps) + s) / (1 + s) * torch.pi * 0.5) ** 2
+    alphas_cumprod = torch.cos(((x / steps) + s) / (1 + s) * math.pi * 0.5) ** 2
     alphas_cumprod = alphas_cumprod / alphas_cumprod[0]
     betas = 1 - (alphas_cumprod[1:] / alphas_cumprod[:-1])
     return torch.clip(betas, 0, 0.999)
@@ -495,7 +496,8 @@ class Trainer(object):
         step_start_ema = 2000,
         update_ema_every = 10,
         save_and_sample_every = 1000,
-        results_folder = './results'
+        results_folder = './results',
+        nsamples = 2
     ):
         super().__init__()
         self.model = diffusion_model
@@ -522,6 +524,8 @@ class Trainer(object):
 
         self.results_folder = Path(results_folder)
         self.results_folder.mkdir(exist_ok = True)
+        
+        self.nsamples = nsamples
 
         self.reset_parameters()
 
@@ -571,7 +575,7 @@ class Trainer(object):
 
             if self.step != 0 and self.step % self.save_and_sample_every == 0:
                 milestone = self.step // self.save_and_sample_every
-                batches = num_to_groups(36, self.batch_size)
+                batches = num_to_groups(self.nsamples, self.batch_size)
                 all_images_list = list(map(lambda n: self.ema_model.sample(batch_size=n), batches))
                 all_images = torch.cat(all_images_list, dim=0)
                 all_images = (all_images + 1) * 0.5
