@@ -35,7 +35,7 @@ mtype = opt.model
 
 if mtype == "unet0":
   from alt_models.Unet0 import Unet
-elif mtype == "unet-CN0":
+elif mtype == "unetcn0":
   from alt_models.UnetCN0 import Unet
 else:
   from denoising_diffusion_pytorch import Unet
