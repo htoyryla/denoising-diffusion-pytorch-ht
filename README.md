@@ -39,6 +39,17 @@ python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000
 ## How to sample
 
 
+python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_for_stored_images --image path_to_seed_image --mul 2  --lr 0.0004 --imageSize 1024 --show --modelSize 512 --load path_to_stored_model --mults same_as_in_training --ema --saveEvery 50 --saveAfter 550  --weak 1  --model  unetcn0
+
+--mul --weak affect how seed image is handled
+--lr 0.0004 clip guidance lr, use this to find bvalance between text and image
+--imageSize 1024 generated image size, multiple of 32
+--modelSize 512 native size of the model
+--ema  use ema checkpoint (you can test what difference does it make)
+--saveEvery 50   saving of frames during iteration
+--saveAfter 550  start saving only after
+--model  unetcn0 as in training
+
 
 ## --------------------- Original readme starts here -----------------------------------------
 
