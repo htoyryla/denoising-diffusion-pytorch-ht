@@ -1,4 +1,4 @@
-from denoising_diffusion_pytorch import Unet, GaussianDiffusion
+from denoising_diffusion_pytorch import GaussianDiffusion
 import torch
 from torchvision.utils import save_image
 from torchvision import transforms
@@ -39,9 +39,19 @@ parser.add_argument('--saveiters', action="store_true", help='show image in a wi
 #parser.add_argument('--saveLat', type=str, default="", help='path to save pth')
 parser.add_argument('--mults', type=int, nargs='*', default=[1, 1, 2, 2, 4, 8], help='')
 parser.add_argument('--weak', type=float, default=1., help='weaken input img')
+parser.add_argument('--model', type=str, default="", help='')
 
 
 opt = parser.parse_args()
+
+mtype = opt.model
+
+if mtype == "unet0":
+  from alt_models.Unet0 import Unet
+elif mtype == "unetcn0":
+  from alt_models.UnetCN0 import Unet
+else:
+  from denoising_diffusion_pytorch import Unet
 
 def show_on_screen(image_tensor, window="out", maxsize=720):
     im = image_tensor.detach().numpy()   # convert from pytorch tensor to numpy array
@@ -92,8 +102,15 @@ cnorm = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0
 
 text = opt.text #"a portrait of frightened Dostoevsky, a watercolor with charcoal"
 
+data = torch.load(opt.load)
 m = "ema" if opt.ema else "model"
-diffusion.load_state_dict(torch.load(opt.load)[m], strict=False)
+diffusion.load_state_dict(data[m], strict=False)
+
+try:
+  print("loaded "+opt.load+", correct mults: "+",".join(str(x) for x in data['mults']))
+except:
+  print("loaded "+opt.load+", no mults stored")
+
 
 transform = transforms.Compose([transforms.Resize((isize, isize)), transforms.ToTensor()])
 
