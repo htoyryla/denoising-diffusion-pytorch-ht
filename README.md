@@ -20,6 +20,26 @@ Some early results, using datasets of a few hundred images, selected according t
 <img src="https://user-images.githubusercontent.com/15064373/163940103-836b4e52-57e5-4375-b292-3d538f1e3f6d.jpeg" width="360"></img>
 </p>
 
+## How to train
+
+python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000 --accum 10 --dir output_folder --imageSize 512 --barchSize 2 --saveEvery 100 --nsamples 2 --mults 1 1 2 2 4 8 --model unetcn0
+
+--lr learning rate
+--steps diffusion steps
+--accum accumulate gradient over x iters
+--dir output_folder 
+--imageSize native image size for the model to be trained
+--batchSize  
+--saveEvery save and sample at every
+--nsamples how many samples to generate when saving, small number can save much time
+--mults multipliers affecting number of feature maps per level, use larger number for the later, more abstract levels
+        number of multipliers also determines depth of the model, good rule is to  have 5 numbers of 256 and 6 numbers for 512
+--model unetcn0 (selects which model architecture is used, to be explained later)
+
+## How to sample
+
+
+
 ## --------------------- Original readme starts here -----------------------------------------
 
 <img src="./denoising-diffusion.png" width="500px"></img>
