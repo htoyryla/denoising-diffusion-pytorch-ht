@@ -30,11 +30,12 @@ python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000
 --dir output_folder 
 --imageSize native image size for the model to be trained
 --batchSize  
---saveEvery save and sample at every
+--saveEvery save and sample at given intervals
 --nsamples how many samples to generate when saving, small number can save much time
---mults multipliers affecting number of feature maps per level, use larger number for the later, more abstract levels
+--mults multipliers affecting number of feature maps per level, use larger numbers for the later, more abstract levels
         number of multipliers also determines depth of the model, good rule is to  have 5 numbers of 256 and 6 numbers for 512
---model unetcn0 (selects which model architecture is used, to be explained later)
+        too few layers will make model fail to perceive the image as a whole
+--model unetcn0 (selects which model architecture is used, to be explained later, this one at least works)
 ```
 ## How to sample
 
@@ -47,7 +48,7 @@ python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_
 --modelSize 512 native size of the model
 --ema  use ema checkpoint (you can test what difference does it make)
 --saveEvery 50   saving of frames during iteration
---saveAfter 550  start saving only after
+--saveAfter 550  start saving only after given step
 --model  unetcn0 as in training
 ```
 
