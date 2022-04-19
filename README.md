@@ -21,7 +21,7 @@ Some early results, using datasets of a few hundred images, selected according t
 </p>
 
 ## How to train
-
+```
 python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000 --accum 10 --dir output_folder --imageSize 512 --barchSize 2 --saveEvery 100 --nsamples 2 --mults 1 1 2 2 4 8 --model unetcn0
 
 --lr learning rate
@@ -35,10 +35,10 @@ python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000
 --mults multipliers affecting number of feature maps per level, use larger number for the later, more abstract levels
         number of multipliers also determines depth of the model, good rule is to  have 5 numbers of 256 and 6 numbers for 512
 --model unetcn0 (selects which model architecture is used, to be explained later)
-
+```
 ## How to sample
 
-
+```
 python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_for_stored_images --image path_to_seed_image --mul 2  --lr 0.0004 --imageSize 1024 --show --modelSize 512 --load path_to_stored_model --mults same_as_in_training --ema --saveEvery 50 --saveAfter 550  --weak 1  --model  unetcn0
 
 --mul --weak affect how seed image is handled
