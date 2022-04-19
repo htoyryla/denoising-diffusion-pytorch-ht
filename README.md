@@ -1,3 +1,27 @@
+## Experimenting with image making using denoising diffusion
+
+Based on the excellent and clear codebase by @lucidrains
+
+My intention is
+
+* add scripts for convenient training and image generation / transformation
+* experiment with image transformation using diffusion
+* especially training with small homogenous datasets that can be quickly trained and retrained
+* and use the trained models as "brushes" or "filters" 
+* starting from seed images and using various means of guidance (text/CLIP, texture/VGG+GRAM etc) 
+* experiment with various model structures
+
+Some early results
+
+<p float="left">
+<img src="https://user-images.githubusercontent.com/15064373/163939108-f131d71d-384a-4211-95ab-573e1cfe33ee.jpeg" width="420"></img>
+<img src="https://user-images.githubusercontent.com/15064373/163939115-adf16ff6-8ef7-4003-98c0-6cfc604a44c3.jpeg" width="420"></img>
+<img src="https://user-images.githubusercontent.com/15064373/163939127-acac4f49-7a42-4c81-928a-5d8d56998a22.png" width="420"></img>
+<img src="https://user-images.githubusercontent.com/15064373/163940103-836b4e52-57e5-4375-b292-3d538f1e3f6d.jpeg" width="420"></img>
+</p>
+
+## --------------------- Original readme starts here -----------------------------------------
+
 <img src="./denoising-diffusion.png" width="500px"></img>
 
 ## Denoising Diffusion Probabilistic Model, in Pytorch
