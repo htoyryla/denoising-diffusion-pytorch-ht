@@ -49,7 +49,7 @@ python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_
 --saveEvery 50   saving of frames during iteration
 --saveAfter 550  start saving only after
 --model  unetcn0 as in training
-
+```
 
 ## --------------------- Original readme starts here -----------------------------------------
 
