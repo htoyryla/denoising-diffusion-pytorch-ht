@@ -497,7 +497,8 @@ class Trainer(object):
         update_ema_every = 10,
         save_and_sample_every = 1000,
         results_folder = './results',
-        nsamples = 2
+        nsamples = 2,
+        opts = {}
     ):
         super().__init__()
         self.model = diffusion_model
@@ -526,6 +527,7 @@ class Trainer(object):
         self.results_folder.mkdir(exist_ok = True)
         
         self.nsamples = nsamples
+        self.opts = opts
 
         self.reset_parameters()
 
@@ -543,7 +545,8 @@ class Trainer(object):
             'step': self.step,
             'model': self.model.state_dict(),
             'ema': self.ema_model.state_dict(),
-            'scaler': self.scaler.state_dict()
+            'scaler': self.scaler.state_dict(),
+            'mults': self.opts.mults
         }
         torch.save(data, str(self.results_folder / f'model-{milestone}.pt'))
 

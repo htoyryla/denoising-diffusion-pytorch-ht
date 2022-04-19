@@ -68,7 +68,8 @@ trainer = Trainer(
     ema_decay = 0.995,                # exponential moving average decay
     amp = False,                       # turn on mixed precision training with apex
     results_folder = opt.dir,
-    nsamples = opt.nsamples
+    nsamples = opt.nsamples,
+    opts = opt
 )
 
 if opt.load != "":
@@ -77,5 +78,9 @@ if opt.load != "":
     trainer.step = data['step']
     trainer.model.load_state_dict(data['model'])
     trainer.ema_model.load_state_dict(data['ema'])
-
+    try:
+      print("loaded "+opt.load+", correct mults: "+",".join(str(x) for x in data['mults']))
+    except:
+      print("loaded "+opt.load+", no mults stored")
+     
 trainer.train()
