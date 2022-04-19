@@ -14,10 +14,10 @@ My intention is
 Some early results, using datasets of a few hundred images, selected according to visual and not semantic criteria. Using ConvNext based Unet, not the current version but from before the recent changes, training at 512px for 1 - 2 days. It also appears that once we have a pretrained model, it can quite fast be retrained with a visually different set. BTW, I have not succeeded to get the newest Unet/Convnext to train satisfactorily (but it might just be that I have not yet found a correct lr)
 
 <p float="left">
-<img src="https://user-images.githubusercontent.com/15064373/163939108-f131d71d-384a-4211-95ab-573e1cfe33ee.jpeg" width="420"></img>
-<img src="https://user-images.githubusercontent.com/15064373/163939115-adf16ff6-8ef7-4003-98c0-6cfc604a44c3.jpeg" width="420"></img>
-<img src="https://user-images.githubusercontent.com/15064373/163939127-acac4f49-7a42-4c81-928a-5d8d56998a22.png" width="420"></img>
-<img src="https://user-images.githubusercontent.com/15064373/163940103-836b4e52-57e5-4375-b292-3d538f1e3f6d.jpeg" width="420"></img>
+<img src="https://user-images.githubusercontent.com/15064373/163939108-f131d71d-384a-4211-95ab-573e1cfe33ee.jpeg" width="360"></img>
+<img src="https://user-images.githubusercontent.com/15064373/163939115-adf16ff6-8ef7-4003-98c0-6cfc604a44c3.jpeg" width="360"></img>
+<img src="https://user-images.githubusercontent.com/15064373/163939127-acac4f49-7a42-4c81-928a-5d8d56998a22.png" width="360"></img>
+<img src="https://user-images.githubusercontent.com/15064373/163940103-836b4e52-57e5-4375-b292-3d538f1e3f6d.jpeg" width="360"></img>
 </p>
 
 ## --------------------- Original readme starts here -----------------------------------------
