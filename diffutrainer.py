@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser()
 
 # define params and their types with defaults if needed
 parser.add_argument('--images', type=str, default="", help='path to images')
-parser.add_argument('--lr', type=float, default=2e-5, help='learning rate')
+parser.add_argument('--lr', type=float, default=4e-5, help='learning rate')
 parser.add_argument('--steps', type=int, default=1000, help='number of diffusion steps')
 parser.add_argument('--accum', type=int, default=10, help='number of iterations per gradient update')
 parser.add_argument('--trainsteps', type=int, default=100000, help='number of iterations')
@@ -18,7 +18,7 @@ parser.add_argument('--name', type=str, default="oma", help='basename for storin
 parser.add_argument('--imageSize', type=int, default=512, help='image size')
 parser.add_argument('--batchSize', type=int, default=2, help='batch size')
 parser.add_argument('--saveEvery', type=int, default=100, help='image and model save frequency')
-parser.add_argument('--losstype', type=str, default="l1", help='path to images')
+parser.add_argument('--losstype', type=str, default="l2", help='path to images')
 #parser.add_argument('--glayers', type=int, default=5, help='image save frequency')
 
 parser.add_argument('--load', type=str, default="", help='path to pth file')
@@ -64,9 +64,9 @@ trainer = Trainer(
 
 if opt.load != "":
     data = torch.load(opt.load)
-    diffusion.load(data)
-    #trainer.step = data['step']
-    #trainer.model.load_state_dict(data['model'])
-    #trainer.ema_model.load_state_dict(data['ema'])
+    #trainer.load(data)
+    trainer.step = data['step']
+    trainer.model.load_state_dict(data['model'])
+    trainer.ema_model.load_state_dict(data['ema'])
 
 trainer.train()
