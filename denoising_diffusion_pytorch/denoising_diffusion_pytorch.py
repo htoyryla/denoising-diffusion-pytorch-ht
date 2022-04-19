@@ -294,7 +294,7 @@ def cosine_beta_schedule(timesteps, s = 0.008):
     as proposed in https://openreview.net/forum?id=-NEXDKk8gZ
     """
     steps = timesteps + 1
-    x = torch.linspace(0, steps, steps)
+    x = torch.linspace(0, timesteps, steps)
     alphas_cumprod = torch.cos(((x / steps) + s) / (1 + s) * math.pi * 0.5) ** 2
     alphas_cumprod = alphas_cumprod / alphas_cumprod[0]
     betas = 1 - (alphas_cumprod[1:] / alphas_cumprod[:-1])
@@ -557,14 +557,17 @@ class Trainer(object):
 
     def train(self):
         while self.step < self.train_num_steps:
+            al = 0
             for i in range(self.gradient_accumulate_every):
                 data = next(self.dl).cuda()
 
                 with autocast(enabled = self.amp):
                     loss = self.model(data)
                     self.scaler.scale(loss / self.gradient_accumulate_every).backward()
+                    al += loss.item()
 
-                print(f'{self.step}: {loss.item()}')
+            al /= self.gradient_accumulate_every
+            print(f'{self.step}: {al}')
 
             self.scaler.step(self.opt)
             self.scaler.update()
