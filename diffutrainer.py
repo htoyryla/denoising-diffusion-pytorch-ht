@@ -1,4 +1,4 @@
-from denoising_diffusion_pytorch import GaussianDiffusion, Unet, Trainer
+from denoising_diffusion_pytorch import GaussianDiffusion, Trainer
 #from UnetGen import UnetGen
 import torch
 
@@ -27,9 +27,18 @@ parser.add_argument('--load', type=str, default="", help='path to pth file')
 parser.add_argument('--nostrict', action="store_true", help='')
 parser.add_argument('--mults', type=int, nargs='*', default=[1, 1, 2, 2, 4, 8], help='')
 parser.add_argument('--nsamples', type=int, default=4, help='how many samples to generate')
-
+parser.add_argument('--model', type=str, default="", help='')
 
 opt = parser.parse_args()
+
+mtype = opt.model
+
+if mtype == "unet0":
+  from alt_models.Unet0 import Unet
+elif mtype == "unet-CN0":
+  from alt_models.UnetCN0 import Unet
+else:
+  from denoising_diffusion_pytorch import Unet
 
 model = Unet(
     dim = 64,
