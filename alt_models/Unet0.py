@@ -57,40 +57,14 @@ class SinusoidalPosEmb(nn.Module):
         self.dim = dim
 
     def forward(self, x):
+        device = x.device
         half_dim = self.dim // 2
         emb = math.log(10000) / (half_dim - 1)
-        emb = torch.exp(torch.arange(half_dim) * -emb)
+        emb = torch.exp(torch.arange(half_dim, device=device) * -emb)
         emb = x[:, None] * emb[None, :]
         emb = torch.cat((emb.sin(), emb.cos()), dim=-1)
         return emb
 
-class ResnetBlock(nn.Module):
-    def __init__(self, dim, out_dim, *, time_emb_dim, groups = 32):
-        super().__init__()
-        self.mlp = nn.Sequential(
-            Mish(),
-            nn.Linear(time_emb_dim, out_dim)
-        )
-
-        self.block1 = nn.Sequential(
-            nn.Conv2d(dim, out_dim, 3, padding=1),
-            nn.GroupNorm(groups, out_dim),
-            Mish()
-        )
-
-        self.block2 = nn.Sequential(
-            nn.Conv2d(out_dim, out_dim, 3, padding=1),
-            nn.GroupNorm(groups, out_dim),
-            Mish()
-        )
-
-        self.res_conv = nn.Conv2d(dim, out_dim, 1) if dim != out_dim else nn.Identity()
-
-    def forward(self, x, time_emb):
-        h = self.block1(x)
-        h += self.mlp(time_emb)[:, :, None, None]
-        h = self.block2(h)
-        return h + self.res_conv(x)
 
 class Mish(nn.Module):
     def forward(self, x):
@@ -113,25 +87,56 @@ class Downsample(nn.Module):
         return self.conv(x)
 
 class Rezero(nn.Module):
-    def __init__(self, dim):
+    def __init__(self, fn):
         super().__init__()
+        self.fn = fn 
         self.g = nn.Parameter(torch.zeros(1))
 
     def forward(self, x):
-        return x * self.g
+        return self.fn(x) * self.g
+# model
+
+class Block(nn.Module):
+    def __init__(self, dim, dim_out, groups = 8):
+        super().__init__()
+        self.block = nn.Sequential(
+            nn.Conv2d(dim, dim_out, 3, padding=1),
+            nn.GroupNorm(groups, dim_out),
+            Mish()
+        )
+    def forward(self, x):
+        return self.block(x)
+
+class ResnetBlock(nn.Module):
+    def __init__(self, dim, dim_out, *, time_emb_dim, groups = 8):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            Mish(),
+            nn.Linear(time_emb_dim, dim_out)
+        )
+
+        self.block1 = Block(dim, dim_out)
+        self.block2 = Block(dim_out, dim_out)
+        self.res_conv = nn.Conv2d(dim, dim_out, 1) if dim != dim_out else nn.Identity()
+
+    def forward(self, x, time_emb):
+        h = self.block1(x)
+        h += self.mlp(time_emb)[:, :, None, None]
+        h = self.block2(h)
+        return h + self.res_conv(x)
 
 class LinearAttention(nn.Module):
-    def __init__(self, dim, heads = 8, dim_head = 32):
+    def __init__(self, dim, heads = 4, dim_head = 32):
         super().__init__()
         self.heads = heads
         hidden_dim = dim_head * heads
-        self.to_qkv = nn.Conv2d(dim, hidden_dim, 1, bias = False)
+        self.to_qkv = nn.Conv2d(dim, hidden_dim * 3, 1, bias = False)
         self.to_out = nn.Conv2d(hidden_dim, dim, 1)
 
     def forward(self, x):
         b, c, h, w = x.shape
         qkv = self.to_qkv(x)
-        q, k, v = rearrange(qkv, 'b (qkv heads c) h w -> qkv b heads c (h w)', heads = self.heads)
+        q, k, v = rearrange(qkv, 'b (qkv heads c) h w -> qkv b heads c (h w)', heads = self.heads, qkv=3)
         q = q.softmax(dim=-2)
         k = k.softmax(dim=-1)
         context = torch.einsum('bhdn,bhen->bhde', k, v)
@@ -139,7 +144,6 @@ class LinearAttention(nn.Module):
         out = rearrange(out, 'b heads c (h w) -> b (heads c) h w', heads=self.heads, h=h, w=w)
         return self.to_out(out)
 
-# model
 
 class Unet(nn.Module):
     def __init__(self, dim, dim_mults=(1, 2, 4, 8), groups = 32):
