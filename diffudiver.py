@@ -36,7 +36,7 @@ parser.add_argument('--saveAfter', type=int, default=0, help='image save frequen
 parser.add_argument('--low', type=float, default=0.4, help='lower limit for cut scale')
 parser.add_argument('--high', type=float, default=1.0, help='higher limit for cut scale')
 parser.add_argument('--cutn', type=int, default=24, help='number of cutouts for CLIP')
-parser.add_argument('--load', type=str, default="models/model-20.pt", help='path to pth file')
+parser.add_argument('--load', type=str, default="", help='path to pth file')
 parser.add_argument('--saveiters', action="store_true", help='show image in a window')
 #parser.add_argument('--saveLat', type=str, default="", help='path to save pth')
 parser.add_argument('--mults', type=int, nargs='*', default=[1, 1, 2, 2, 4, 8], help='')
@@ -111,9 +111,10 @@ cnorm = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0
 
 text = opt.text #"a portrait of frightened Dostoevsky, a watercolor with charcoal"
 
-data = torch.load(opt.load)
-m = "ema" if opt.ema else "model"
-diffusion.load_state_dict(data[m], strict=False)
+if opt.load != "":
+  data = torch.load(opt.load)
+  m = "ema" if opt.ema else "model"
+  diffusion.load_state_dict(data[m], strict=False)
 
 try:
   print("loaded "+opt.load+", correct mults: "+",".join(str(x) for x in data['mults']))
@@ -142,25 +143,26 @@ for i in tqdm(reversed(range(0, steps)), desc='sampling loop time step', total=s
     t = torch.full((bs,), i // mul, device='cuda', dtype=torch.long)
     imT = diffusion.p_sample(imT, t.cuda())
 
-    with torch.enable_grad():
-      imT.requires_grad = True
-      optimizer = torch.optim.Adam([imT], opt.lr)  
+    if opt.text:
+      with torch.enable_grad():
+        imT.requires_grad = True
+        optimizer = torch.optim.Adam([imT], opt.lr)  
 
-      nimg = (imT.clip(-1, 1) + 1) / 2     
-      nimg = cut(nimg, cutn=12, low=0.6, high=0.97, norm = cnorm)
+        nimg = (imT.clip(-1, 1) + 1) / 2     
+        nimg = cut(nimg, cutn=12, low=0.6, high=0.97, norm = cnorm)
  
-      # get image encoding from CLIP
+        # get image encoding from CLIP
  
-      img_enc = perceptor.encode_image(nimg) 
+        img_enc = perceptor.encode_image(nimg) 
   
-      # we already have text embedding for the promt in txt_enc
-      # so we can evaluate similarity
+        # we already have text embedding for the promt in txt_enc
+        # so we can evaluate similarity
      
-      loss = 10*(1-torch.cosine_similarity(txt_enc, img_enc)).view(-1, bs).T.mean(1)
+        loss = 10*(1-torch.cosine_similarity(txt_enc, img_enc)).view(-1, bs).T.mean(1)
   
-      optimizer.zero_grad()   
-      loss.backward()               # backprogation to find out how much the lats are off
-      optimizer.step()
+        optimizer.zero_grad()   
+        loss.backward()               # backprogation to find out how much the lats are off
+        optimizer.step()
 
     if opt.saveiters or (opt.saveEvery > 0 and  j % opt.saveEvery == 0 and j > opt.saveAfter):
         save_image((imT.clone()+1)/2, opt.dir+"/"+name + "-" + str(j)+".png")
