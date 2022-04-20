@@ -28,6 +28,8 @@ parser.add_argument('--mul', type=float, default=2., help='')
 parser.add_argument('--show', action="store_true", help='show image in a window')
 parser.add_argument('--ema', action="store_true", help='')
 parser.add_argument('--imageSize', type=int, default=512, help='image size')
+parser.add_argument('--h', type=int, default=0, help='image size')
+parser.add_argument('--w', type=int, default=0, help='image size')
 parser.add_argument('--modelSize', type=int, default=512, help='image size')
 parser.add_argument('--saveEvery', type=int, default=0, help='image save frequency')
 parser.add_argument('--saveAfter', type=int, default=0, help='image save frequency')
@@ -45,6 +47,13 @@ parser.add_argument('--model', type=str, default="", help='')
 opt = parser.parse_args()
 
 mtype = opt.model
+
+if opt.h == 0:
+    opt.h = opt.imageSize
+
+if opt.w == 0:
+    opt.w = opt.imageSize
+    
 
 if mtype == "unet0":
   from alt_models.Unet0 import Unet
@@ -69,8 +78,8 @@ def show_on_screen(image_tensor, window="out", maxsize=720):
     
     (h, w) = tuple(im.shape[:2])
     if h > maxsize:
+        w = int(w * (maxsize/h)) 
         h = maxsize
-        w = maxsize #int(w * (maxsize/h)) 
         im = cv2.resize(im,(w, h))
         
     # show it in a window (this will not work on a remote session)    
@@ -81,7 +90,7 @@ name = opt.name #"out5/testcd"
 steps = opt.steps
 bs = 1
 ifn = opt.image #"/work/dset/hf2019/train/DSC00131.JPG" #20150816_144314-a1.png"
-isize = opt.imageSize
+#isize = opt.imageSize
 
 model = Unet(
     dim = 64,
@@ -112,7 +121,7 @@ except:
   print("loaded "+opt.load+", no mults stored")
 
 
-transform = transforms.Compose([transforms.Resize((isize, isize)), transforms.ToTensor()])
+transform = transforms.Compose([transforms.Resize((opt.h, opt.w)), transforms.ToTensor()])
 
 if ifn != "":   
   imT = transform(Image.open(ifn).convert('RGB')).float().cuda().unsqueeze(0)
@@ -120,7 +129,7 @@ if ifn != "":
   imT *= opt.weak
   mul = opt.mul
 else:
-   imT = torch.zeros(bs,3,isize,isize).normal_(0,1).cuda()
+   imT = torch.zeros(bs,3,opt.h,opt.w).normal_(0,1).cuda()
    mul = 1
 
 
