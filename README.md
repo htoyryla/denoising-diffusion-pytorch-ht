@@ -2,6 +2,11 @@
 
 Based on the excellent and clear codebase by @lucidrains
 
+This is an experimental project with emphasis on visual work. I would not mind if somebody trained a really cool model,
+but in general it is best to try in small scale. Even 200 images and a few hours of training.  See discussions.
+
+Model architectures unetcn0 (Unet with convnext) and unet0 (unet with resnet) are known to work. Both copied from @lucidrains repo.
+
 My intention is
 
 * add scripts for convenient training and image generation / transformation
