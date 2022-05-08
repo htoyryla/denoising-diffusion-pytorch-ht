@@ -62,6 +62,11 @@ python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_
 --saveEvery 50   saving of frames during iteration
 --saveAfter 550  start saving only after given step
 --model  unetcn0 as in training
+
+--text a text prompt
+--textw text guidance weight
+--tgt_image target image for structural guidance
+--ssimw structural guidance weight
 ```
 
 ## --------------------- Original readme starts here -----------------------------------------
