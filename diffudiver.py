@@ -8,6 +8,7 @@ import os
 import clip
 import argparse
 import cv2
+from pytorch_msssim import ssim
 
 '''
 pip install denoising_diffusion_pytorch
@@ -20,7 +21,10 @@ parser = argparse.ArgumentParser()
 # define params and their types with defaults if needed
 parser.add_argument('--text', type=str, default="", help='text prompt')
 parser.add_argument('--image', type=str, default="", help='path to image')
+parser.add_argument('--tgt_image', type=str, default="", help='path to image')
 parser.add_argument('--lr', type=float, default=0.05, help='learning rate')
+parser.add_argument('--ssimw', type=float, default=1., help='ssim weight')
+parser.add_argument('--textw', type=float, default=1., help='text weight')
 parser.add_argument('--steps', type=int, default=1000, help='number of iterations')
 parser.add_argument('--dir', type=str, default="out", help='basename for storing images')
 parser.add_argument('--name', type=str, default="test", help='basename for storing images')
@@ -113,13 +117,16 @@ text = opt.text #"a portrait of frightened Dostoevsky, a watercolor with charcoa
 
 if opt.load != "":
   data = torch.load(opt.load)
+
+  try:
+    print("loaded "+opt.load+", correct mults: "+",".join(str(x) for x in data['mults']))
+  except:
+    print("loaded "+opt.load+", no mults stored")
+
   m = "ema" if opt.ema else "model"
   diffusion.load_state_dict(data[m], strict=False)
 
-try:
-  print("loaded "+opt.load+", correct mults: "+",".join(str(x) for x in data['mults']))
-except:
-  print("loaded "+opt.load+", no mults stored")
+
 
 
 transform = transforms.Compose([transforms.Resize((opt.h, opt.w)), transforms.ToTensor()])
@@ -133,21 +140,28 @@ else:
    imT = torch.zeros(bs,3,opt.h,opt.w).normal_(0,1).cuda()
    mul = 1
 
+if opt.tgt_image != "":   
+  imS = transform(Image.open(opt.tgt_image).convert('RGB')).float().cuda().unsqueeze(0)
+  imS = (imS * 2) - 1
 
 tx = clip.tokenize(text)                        # convert text to a list of tokens 
 txt_enc = perceptor.encode_text(tx.cuda()).detach()   # get sentence embedding for the tokens
 del tx
+
 
 j = 0
 for i in tqdm(reversed(range(0, steps)), desc='sampling loop time step', total=steps): 
     t = torch.full((bs,), i // mul, device='cuda', dtype=torch.long)
     imT = diffusion.p_sample(imT, t.cuda())
 
-    if opt.text:
-      with torch.enable_grad():
-        imT.requires_grad = True
-        optimizer = torch.optim.Adam([imT], opt.lr)  
+    if opt.text != "" or opt.tgt_image != "":
+      imT.requires_grad = True
+      optimizer = torch.optim.Adam([imT], opt.lr)  
 
+    loss = 0
+
+    losses = []
+    if opt.text != "":
         nimg = (imT.clip(-1, 1) + 1) / 2     
         nimg = cut(nimg, cutn=12, low=0.6, high=0.97, norm = cnorm)
  
@@ -158,11 +172,24 @@ for i in tqdm(reversed(range(0, steps)), desc='sampling loop time step', total=s
         # we already have text embedding for the promt in txt_enc
         # so we can evaluate similarity
      
-        loss = 10*(1-torch.cosine_similarity(txt_enc, img_enc)).view(-1, bs).T.mean(1)
-  
-        optimizer.zero_grad()   
-        loss.backward()               # backprogation to find out how much the lats are off
-        optimizer.step()
+        loss = opt.textw*10*(1-torch.cosine_similarity(txt_enc, img_enc)).view(-1, bs).T.mean(1)
+        losses.append(("Text loss",loss.item())) 
+        #print(opt.text, loss.item())
+
+    if opt.tgt_image != "":
+          loss_ = opt.ssimw * (1 - ssim(imT, imS)).mean() 
+          losses.append(("Ssim loss",loss_.item())) 
+          loss = loss + loss_    
+
+    if loss != 0:
+          if j % 50 == 0:
+              out = ""
+              for item in losses:
+                out += item[0] + ":" + str(item[1]) + " "
+              print(out)
+          optimizer.zero_grad()   
+          loss.backward()               # backprogation to find out how much the lats are off
+          optimizer.step()
 
     if opt.saveiters or (opt.saveEvery > 0 and  j % opt.saveEvery == 0 and j > opt.saveAfter):
         save_image((imT.clone()+1)/2, opt.dir+"/"+name + "-" + str(j)+".png")
