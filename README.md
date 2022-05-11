@@ -52,7 +52,7 @@ python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000
 Currently supports CLIP guidance and use of target image. Use textw for tuning how much effect CLIP has and ssimw to guide target image weight. SSIM is used for target image loss.
 
 ```
-python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_for_stored_images --tgt_image path_to_target_image --lr 0.002 --imageSize 1024 --show --modelSize 512 --load path_to_stored_model --mults same_as_in_training --ema --saveEvery 50 --saveAfter 550  --model  unetcn0
+python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_for_stored_images --tgt_image path_to_target_image --lr 0.002 --imageSize 1024 --modelSize 512 --load path_to_stored_model --mults same_as_in_training --ema --saveEvery 50 --saveAfter 550  --model  unetcn0 --ssimw 1 --textw 0.02
 
 --lr 0.002 rate of change during optimization, experimetn
 --imageSize 1024 generated image size, multiple of 32
@@ -62,6 +62,8 @@ python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_
 --saveAfter 550  start saving only after given step
 --model  unetcn0 as in training
 --mults as in training
+
+--show 
 
 --text a text prompt
 --textw text guidance weight
