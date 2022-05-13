@@ -21,14 +21,17 @@ parser = argparse.ArgumentParser()
 # define params and their types with defaults if needed
 parser.add_argument('--text', type=str, default="", help='text prompt')
 parser.add_argument('--image', type=str, default="", help='path to image')
+parser.add_argument('--img_prompt', type=str, default="", help='path to image')
 parser.add_argument('--tgt_image', type=str, default="", help='path to image')
 parser.add_argument('--lr', type=float, default=0.05, help='learning rate')
 parser.add_argument('--ssimw', type=float, default=1., help='ssim weight')
 parser.add_argument('--textw', type=float, default=1., help='text weight')
+parser.add_argument('--imgpw', type=float, default=1., help='image prompt weight')
 parser.add_argument('--steps', type=int, default=1000, help='number of iterations')
+parser.add_argument('--skip', type=int, default=0, help='number of iterations')
 parser.add_argument('--dir', type=str, default="out", help='basename for storing images')
 parser.add_argument('--name', type=str, default="test", help='basename for storing images')
-parser.add_argument('--mul', type=float, default=2., help='')
+parser.add_argument('--mul', type=float, default=1., help='')
 parser.add_argument('--show', action="store_true", help='show image in a window')
 parser.add_argument('--ema', action="store_true", help='')
 parser.add_argument('--imageSize', type=int, default=512, help='image size')
@@ -144,13 +147,22 @@ if opt.tgt_image != "":
   imS = transform(Image.open(opt.tgt_image).convert('RGB')).float().cuda().unsqueeze(0)
   imS = (imS * 2) - 1
 
+if opt.img_prompt != "":   
+  imP = transform(Image.open(opt.img_prompt).convert('RGB')).float().cuda().unsqueeze(0)
+  #imP = (imP * 2) - 1
+  #nimg = (imP.clip(-1, 1) + 1) / 2     
+  nimg = imP.clip(0,1)
+  nimg = cut(nimg, cutn=12, low=0.6, high=0.97, norm = cnorm)
+  imgp_enc = perceptor.encode_image(nimg.detach()).detach()
+
+
 tx = clip.tokenize(text)                        # convert text to a list of tokens 
 txt_enc = perceptor.encode_text(tx.cuda()).detach()   # get sentence embedding for the tokens
 del tx
 
 
 j = 0
-for i in tqdm(reversed(range(0, steps)), desc='sampling loop time step', total=steps): 
+for i in tqdm(reversed(range(opt.skip, steps)), desc='sampling loop time step', total=steps): 
     t = torch.full((bs,), i // mul, device='cuda', dtype=torch.long)
     imT = diffusion.p_sample(imT, t.cuda())
 
@@ -159,8 +171,10 @@ for i in tqdm(reversed(range(0, steps)), desc='sampling loop time step', total=s
       optimizer = torch.optim.Adam([imT], opt.lr)  
 
     loss = 0
-
     losses = []
+
+    nimg = None
+
     if opt.text != "":
         nimg = (imT.clip(-1, 1) + 1) / 2     
         nimg = cut(nimg, cutn=12, low=0.6, high=0.97, norm = cnorm)
@@ -175,6 +189,15 @@ for i in tqdm(reversed(range(0, steps)), desc='sampling loop time step', total=s
         loss = opt.textw*10*(1-torch.cosine_similarity(txt_enc, img_enc)).view(-1, bs).T.mean(1)
         losses.append(("Text loss",loss.item())) 
         #print(opt.text, loss.item())
+
+    if opt.img_prompt != "":
+        if nimg == None:
+            nimg = (imT.clip(-1, 1) + 1) / 2     
+            nimg = cut(nimg, cutn=12, low=0.6, high=0.97, norm = cnorm)
+            img_enc = perceptor.encode_image(nimg)
+        loss1 = opt.imgpw*10*(1-torch.cosine_similarity(imgp_enc, img_enc)).view(-1, bs).T.mean(1)  
+        losses.append(("Img prompt loss",loss1.item())) 
+        loss = loss + loss1     
 
     if opt.tgt_image != "":
           loss_ = opt.ssimw * (1 - ssim(imT, imS)).mean() 
