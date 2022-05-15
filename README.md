@@ -32,7 +32,7 @@ Some early results, using datasets of a few hundred images, selected according t
 Using unetcn0 I have been able to train useful models with as few as 250 images, using 512px imagesize and 6+6 layers unet.
 
 ```
-python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000 --accum 10 --dir output_folder --imageSize 512 --barchSize 2 --saveEvery 100 --nsamples 2 --mults 1 1 2 2 4 8 --model unetcn0
+python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000 --accum 10 --dir output_folder --imageSize 512 --batchSize 2 --saveEvery 100 --nsamples 2 --mults 1 1 2 2 4 8 --model unetcn0
 
 --lr learning rate
 --steps diffusion steps
@@ -49,20 +49,29 @@ python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000
 ```
 ## How to sample
 
-Currently supports CLIP guidance and use of seed image. Use lr for tuning how much effect CLIP has. 
+Currently supports CLIP guidance and use of target image. Use textw for tuning how much effect CLIP has and ssimw to guide target image weight. SSIM is used for target image loss.
 
 ```
-python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_for_stored_images --image path_to_seed_image --mul 2  --lr 0.0004 --imageSize 1024 --show --modelSize 512 --load path_to_stored_model --mults same_as_in_training --ema --saveEvery 50 --saveAfter 550  --weak 1  --model  unetcn0
+python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_for_stored_images --tgt_image path_to_target_image --lr 0.002 --imageSize 1024 --modelSize 512 --load path_to_stored_model --mults same_as_in_training --ema --saveEvery 50 --saveAfter 550  --model  unetcn0 --ssimw 1 --textw 0.02
 
---mul --weak affect how seed image is handled
---lr 0.0004 clip guidance lr, use this to find bvalance between text and image
+--lr 0.002 rate of change during optimization, experimetn
 --imageSize 1024 generated image size, multiple of 32
 --modelSize 512 native size of the model
 --ema  use ema checkpoint (you can test what difference does it make)
 --saveEvery 50   saving of frames during iteration
 --saveAfter 550  start saving only after given step
 --model  unetcn0 as in training
+--mults as in training
+
+--show 
+
+--text a text prompt
+--textw text guidance weight
+--tgt_image target image for structural guidance
+--ssimw structural guidance weight
 ```
+
+There is also an experimental option to start from a noised seed image instead of pure noise. Use --image for the seed image and set --mul slightly above 1. You can also "weaken" the seed image using values of --weak higher than 1.   
 
 ## --------------------- Original readme starts here -----------------------------------------
 
