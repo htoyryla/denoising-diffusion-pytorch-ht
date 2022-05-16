@@ -29,7 +29,7 @@ Some early results, using datasets of a few hundred images, selected according t
 
 ## How to train
 
-Using unetcn0 I have been able to train useful models with as few as 250 images, using 512px imagesize and 6+6 layers unet.
+Using unetcn0 and unet0 I have been able to train useful models with as few as 250 images, using 512px imagesize and 6+6 layers unet.
 
 ```
 python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000 --accum 10 --dir output_folder --imageSize 512 --batchSize 2 --saveEvery 100 --nsamples 2 --mults 1 1 2 2 4 8 --model unet0
