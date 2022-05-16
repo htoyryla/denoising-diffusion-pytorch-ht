@@ -32,7 +32,7 @@ Some early results, using datasets of a few hundred images, selected according t
 Using unetcn0 I have been able to train useful models with as few as 250 images, using 512px imagesize and 6+6 layers unet.
 
 ```
-python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000 --accum 10 --dir output_folder --imageSize 512 --batchSize 2 --saveEvery 100 --nsamples 2 --mults 1 1 2 2 4 8 --model unetcn0
+python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000 --accum 10 --dir output_folder --imageSize 512 --batchSize 2 --saveEvery 100 --nsamples 2 --mults 1 1 2 2 4 8 --model unet0
 
 --lr learning rate
 --steps diffusion steps
@@ -43,7 +43,7 @@ python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000
 --saveEvery save and sample at given intervals
 --nsamples how many samples to generate when saving, small number can save much time
 --mults multipliers affecting number of feature maps per level, use larger numbers for the later, more abstract levels
-        number of multipliers also determines depth of the model, good rule is to  have 5 numbers of 256 and 6 numbers for 512
+        number of multipliers also determines depth of the model, good rule is to  have 5 or 6 numbers of 256 and 6 or 7 numbers for 512
         too few layers will make model fail to perceive the image as a whole
 --model unetcn0 (selects which model architecture is used, to be explained later, this one at least works)
 ```
@@ -52,7 +52,7 @@ python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000
 Currently supports CLIP guidance and use of target image. Use textw for tuning how much effect CLIP has and ssimw to guide target image weight. SSIM is used for target image loss.
 
 ```
-python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_for_stored_images --tgt_image path_to_target_image --lr 0.002 --imageSize 1024 --modelSize 512 --load path_to_stored_model --mults same_as_in_training --ema --saveEvery 50 --saveAfter 550  --model  unetcn0 --ssimw 1 --textw 0.02
+python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_for_stored_images --tgt_image path_to_target_image --lr 0.002 --imageSize 1024 --modelSize 512 --load path_to_stored_model --mults same_as_in_training --ema --saveEvery 50 --saveAfter 550  --model  unet0 --ssimw 1 --textw 0.02
 
 --lr 0.002 rate of change during optimization, experimetn
 --imageSize 1024 generated image size, multiple of 32
