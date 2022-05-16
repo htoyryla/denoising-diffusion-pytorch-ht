@@ -71,7 +71,7 @@ python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_
 --ssimw structural guidance weight
 ```
 
-There is also an experimental option to start from a noised seed image instead of pure noise. Use --image for the seed image and set --mul slightly above 1. You can also "weaken" the seed image using values of --weak higher than 1.   
+There is also an experimental option to start from a noised seed image instead of pure noise. Use --image for the seed image and set --mul slightly above 1. You can also "weaken" the seed image using values of --weak less than 1.   
 
 ## --------------------- Original readme starts here -----------------------------------------
 
