@@ -1,3 +1,5 @@
+# adapted from https://github.com/lucidrains/denoising-diffusion-pytorch
+
 import math
 import torch
 from torch import nn, einsum

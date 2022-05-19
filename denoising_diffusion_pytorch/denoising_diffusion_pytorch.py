@@ -1,3 +1,6 @@
+# originally from https://github.com/lucidrains/denoising-diffusion-pytorch
+
+
 import math
 import copy
 import torch

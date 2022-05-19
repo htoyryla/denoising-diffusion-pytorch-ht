@@ -64,10 +64,13 @@ if opt.w == 0:
 
 if mtype == "unet0":
   from alt_models.Unet0 import Unet
+elif mtype == "unet1":
+  from alt_models.Unet1 import Unet
 elif mtype == "unetcn0":
   from alt_models.UnetCN0 import Unet
 else:
-  from denoising_diffusion_pytorch import Unet
+  print("Unsupported model: "+mtype)
+  exit()
 
 def show_on_screen(image_tensor, window="out", maxsize=720):
     im = image_tensor.detach().numpy()   # convert from pytorch tensor to numpy array

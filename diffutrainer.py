@@ -35,10 +35,13 @@ mtype = opt.model
 
 if mtype == "unet0":
   from alt_models.Unet0 import Unet
+elif mtype == "unet1":
+  from alt_models.Unet1 import Unet
 elif mtype == "unetcn0":
   from alt_models.UnetCN0 import Unet
 else:
-  from denoising_diffusion_pytorch import Unet
+  print("Unsupported model: "+mtype)
+  exit()
 
 model = Unet(
     dim = 64,
