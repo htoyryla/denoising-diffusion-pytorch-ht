@@ -9,6 +9,7 @@ import clip
 import argparse
 import cv2
 from pytorch_msssim import ssim
+from postproc import pprocess
 
 '''
 pip install denoising_diffusion_pytorch
@@ -26,6 +27,7 @@ parser.add_argument('--tgt_image', type=str, default="", help='path to image')
 parser.add_argument('--lr', type=float, default=0.05, help='learning rate')
 parser.add_argument('--ssimw', type=float, default=1., help='ssim weight')
 parser.add_argument('--textw', type=float, default=1., help='text weight')
+parser.add_argument('--tdecay', type=float, default=1., help='text weight decay')
 parser.add_argument('--imgpw', type=float, default=1., help='image prompt weight')
 parser.add_argument('--steps', type=int, default=1000, help='number of iterations')
 parser.add_argument('--skip', type=int, default=0, help='number of iterations')
@@ -49,6 +51,24 @@ parser.add_argument('--saveiters', action="store_true", help='show image in a wi
 parser.add_argument('--mults', type=int, nargs='*', default=[1, 1, 2, 2, 4, 8], help='')
 parser.add_argument('--weak', type=float, default=1., help='weaken input img')
 parser.add_argument('--model', type=str, default="", help='')
+
+parser.add_argument('--contrast', type=float, default=1, help='contrast, 1 for neutral')
+parser.add_argument('--brightness', type=float, default=0, help='brightness, 0 for neutral')
+parser.add_argument('--saturation', type=float, default=1, help='saturation, 1 for neutral')
+parser.add_argument('--gamma', type=float, default=1, help='gamma, 1 for neutral')
+parser.add_argument('--unsharp', type=float, default=0, help='use unsharp mask')
+parser.add_argument('--eqhist', type=float, default=0., help='histogram eq level')
+parser.add_argument('--median', type=int, default=0, help='median blur, 0 for none')
+parser.add_argument('--c1', type=float, default=0., help='min level adj')
+parser.add_argument('--c2', type=float, default=1., help='max level adj')
+parser.add_argument('--sharpenlast', action="store_true", help='save input into file')
+parser.add_argument('--sharpkernel', type=int, default=3, help='median blur, 0 for none')
+parser.add_argument('--ovl0', type=float, default=0, help='')
+parser.add_argument('--bil', type=int, default=0, help='')
+parser.add_argument('--bils1', type=int, default=75, help='')
+parser.add_argument('--bils2', type=int, default=75, help='')
+
+
 
 
 opt = parser.parse_args()
@@ -191,6 +211,8 @@ for i in tqdm(reversed(range(opt.skip, steps)), desc='sampling loop time step', 
      
         loss = opt.textw*10*(1-torch.cosine_similarity(txt_enc, img_enc)).view(-1, bs).T.mean(1)
         losses.append(("Text loss",loss.item())) 
+        if opt.tdecay < 1.:
+            opt.textw = opt.tdecay * opt.textw
         #print(opt.text, loss.item())
 
     if opt.img_prompt != "":
@@ -217,15 +239,20 @@ for i in tqdm(reversed(range(opt.skip, steps)), desc='sampling loop time step', 
           loss.backward()               # backprogation to find out how much the lats are off
           optimizer.step()
 
-    if opt.saveiters or (opt.saveEvery > 0 and  j % opt.saveEvery == 0 and j > opt.saveAfter):
-        save_image((imT.clone()+1)/2, opt.dir+"/"+name + "-" + str(j)+".png")
+    im = None
+    if opt.saveiters or (opt.saveEvery > 0 and  j % opt.saveEvery == 0):
+        im = pprocess(imT.clone().detach(), opt)
+        if j > opt.saveAfter:
+            save_image((im+1)/2, opt.dir+"/"+name + "-" + str(j)+".png")
    
-    if opt.show:
-        show_on_screen(imT[0].clone().cpu())
+        if opt.show:
+          show_on_screen(im[0].cpu())
         
     j += 1
     
 save_image((imT.clone()+1)/2, opt.dir+"/"+name+"-final.png")
+im = pprocess(imT.clone().detach(), opt)
+save_image((im+1)/2, opt.dir+"/"+name+"-finalp.png")
    
 
     
