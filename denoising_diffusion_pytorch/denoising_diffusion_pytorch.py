@@ -17,6 +17,7 @@ from torch.optim import Adam
 from torchvision import transforms, utils
 from PIL import Image
 
+from pytorch_msssim import ssim
 
 from tqdm import tqdm
 from einops import rearrange
@@ -445,6 +446,8 @@ class GaussianDiffusion(nn.Module):
             loss = (noise - x_recon).abs().mean()
         elif self.loss_type == 'l2':
             loss = F.mse_loss(noise, x_recon)
+        elif self.loss_type == 'ssim':
+            loss = 20*(1 - ssim(noise, x_recon))    
         else:
             raise NotImplementedError()
 
@@ -562,6 +565,7 @@ class Trainer(object):
         self.scaler.load_state_dict(data['scaler'])
 
     def train(self):
+        cl = 0
         while self.step < self.train_num_steps:
             al = 0
             for i in range(self.gradient_accumulate_every):
@@ -573,6 +577,7 @@ class Trainer(object):
                     al += loss.item()
 
             al /= self.gradient_accumulate_every
+            cl += al
             print(f'{self.step}: {al}')
 
             self.scaler.step(self.opt)
@@ -583,6 +588,8 @@ class Trainer(object):
                 self.step_ema()
 
             if self.step != 0 and self.step % self.save_and_sample_every == 0:
+                print("average loss: ",cl/self.save_and_sample_every)
+                cl = 0
                 milestone = self.step // self.save_and_sample_every
                 batches = num_to_groups(self.nsamples, self.batch_size)
                 all_images_list = list(map(lambda n: self.ema_model.sample(batch_size=n), batches))
