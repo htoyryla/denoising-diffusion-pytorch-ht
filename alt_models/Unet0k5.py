@@ -83,7 +83,7 @@ class Upsample(nn.Module):
 class Downsample(nn.Module):
     def __init__(self, dim):
         super().__init__()
-        self.conv = nn.Conv2d(dim, dim, 5, 2, 1)
+        self.conv = nn.Conv2d(dim, dim, 3, 2, 1)
 
     def forward(self, x):
         return self.conv(x)
@@ -102,7 +102,7 @@ class Block(nn.Module):
     def __init__(self, dim, dim_out, groups = 8):
         super().__init__()
         self.block = nn.Sequential(
-            nn.Conv2d(dim, dim_out, 3, padding=1),
+            nn.Conv2d(dim, dim_out, 5, padding=2),
             nn.GroupNorm(groups, dim_out),
             Mish()
         )
