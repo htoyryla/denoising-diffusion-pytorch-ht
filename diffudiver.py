@@ -84,6 +84,8 @@ if opt.w == 0:
 
 if mtype == "unet0":
   from alt_models.Unet0 import Unet
+elif mtype == "unet0k5":
+  from alt_models.Unet0k5 import Unet
 elif mtype == "unet1":
   from alt_models.Unet1 import Unet
 elif mtype == "unetcn0":
