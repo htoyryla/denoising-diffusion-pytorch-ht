@@ -51,6 +51,8 @@ parser.add_argument('--saveiters', action="store_true", help='show image in a wi
 parser.add_argument('--mults', type=int, nargs='*', default=[1, 1, 2, 2, 4, 8], help='')
 parser.add_argument('--weak', type=float, default=1., help='weaken input img')
 parser.add_argument('--model', type=str, default="", help='')
+parser.add_argument('--gradv', action="store_true", help='')
+
 
 parser.add_argument('--contrast', type=float, default=1, help='contrast, 1 for neutral')
 parser.add_argument('--brightness', type=float, default=0, help='brightness, 0 for neutral')
@@ -188,12 +190,20 @@ del tx
 
 j = 0
 for i in tqdm(reversed(range(opt.skip, steps)), desc='sampling loop time step', total=steps): 
-    t = torch.full((bs,), i // mul, device='cuda', dtype=torch.long)
-    imT = diffusion.p_sample(imT, t.cuda())
+    t = torch.full((bs,), i // mul, device='cuda', dtype=torch.long).cuda()
+    
+    
+    imT = diffusion.p_sample(imT, t)
+    
+    if opt.gradv:
+      with torch.no_grad():
+         _, pvar, _ = diffusion.p_mean_variance(imT.detach(), t.detach(), False) #.detach()
+    
+    #print(imT.shape, mmean.shape, pvar.shape, plogvar.shape)
 
-    if opt.text != "" or opt.tgt_image != "":
-      imT.requires_grad = True
-      optimizer = torch.optim.Adam([imT], opt.lr)  
+    #if opt.text != "" or opt.tgt_image != "":
+    imT.requires_grad = True
+    optimizer = torch.optim.Adam([imT], opt.lr)  
 
     loss = 0
     losses = []
@@ -238,7 +248,11 @@ for i in tqdm(reversed(range(opt.skip, steps)), desc='sampling loop time step', 
                 out += item[0] + ":" + str(item[1]) + " "
               print(out)
           optimizer.zero_grad()   
+                    
           loss.backward()               # backprogation to find out how much the lats are off
+       
+          if opt.gradv:
+              imT.grad *= pvar
           optimizer.step()
 
     im = None
