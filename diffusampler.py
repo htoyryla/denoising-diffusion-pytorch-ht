@@ -157,13 +157,13 @@ for e in range(opt.epoch, opt.epoch2, opt.estep):
     m = load_model(fn)
 
     batches = num_to_groups(opt.nsamples, opt.batchSize)
-    print(batches)
+    #print(batches)
     i = 0
     for b in batches :
        images = m.sample(batch_size=b)
        for img in images:
            img = (img + 1)/2    
-           save_image(img, str(opt.dir+"/"+f'name-{e}-{i}.png'))
+           save_image(img, str(opt.dir+"/"+f'{opt.name}-{e}-{i}.png'))
            i += 1
     
 
