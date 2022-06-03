@@ -122,8 +122,7 @@ def show_on_screen(image_tensor, window="out", maxsize=720):
 name = opt.name #"out5/testcd"
 steps = opt.steps
 bs = 1
-ifn = opt.image #"/work/dset/hf2019/train/DSC00131.JPG" #20150816_144314-a1.png"
-#isize = opt.imageSize
+ifn = opt.image 
 
 model = Unet(
     dim = 64,
@@ -142,7 +141,7 @@ perceptor, clip_preprocess = clip.load('ViT-B/32', jit=False)
 perceptor = perceptor.eval()
 cnorm = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
 
-text = opt.text #"a portrait of frightened Dostoevsky, a watercolor with charcoal"
+text = opt.text 
 
 if opt.load != "":
   data = torch.load(opt.load)
@@ -175,8 +174,6 @@ if opt.tgt_image != "":
 
 if opt.img_prompt != "":   
   imP = transform(Image.open(opt.img_prompt).convert('RGB')).float().cuda().unsqueeze(0)
-  #imP = (imP * 2) - 1
-  #nimg = (imP.clip(-1, 1) + 1) / 2     
   nimg = imP.clip(0,1)
   nimg = cut(nimg, cutn=12, low=0.6, high=0.97, norm = cnorm)
   imgp_enc = perceptor.encode_image(nimg.detach()).detach()
