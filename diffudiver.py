@@ -154,23 +154,23 @@ if opt.load != "":
   m = "ema" if opt.ema else "model"
   diffusion.load_state_dict(data[m], strict=False)
 
-
-
-
 transform = transforms.Compose([transforms.Resize((opt.h, opt.w)), transforms.ToTensor()])
 
 if ifn != "":   
-  imT = transform(Image.open(ifn).convert('RGB')).float().cuda().unsqueeze(0)
-  imT = (imT * 2) - 1
-  imT *= opt.weak
+  imT_ = transform(Image.open(ifn).convert('RGB')).float().cuda().unsqueeze(0)
+  imT_ = (imT_ * 2) - 1
+  imT = imT_ * opt.weak
   mul = opt.mul
 else:
    imT = torch.zeros(bs,3,opt.h,opt.w).normal_(0,1).cuda()
    mul = 1
 
 if opt.tgt_image != "":   
-  imS = transform(Image.open(opt.tgt_image).convert('RGB')).float().cuda().unsqueeze(0)
-  imS = (imS * 2) - 1
+  if opt.tgt_image == "init":
+    imS = imT_.clone()
+  else:
+    imS = transform(Image.open(opt.tgt_image).convert('RGB')).float().cuda().unsqueeze(0)
+    imS = (imS * 2) - 1
 
 if opt.img_prompt != "":   
   imP = transform(Image.open(opt.img_prompt).convert('RGB')).float().cuda().unsqueeze(0)
