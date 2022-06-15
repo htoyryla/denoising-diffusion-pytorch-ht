@@ -233,7 +233,7 @@ for i in tqdm(reversed(range(opt.skip, steps)), desc='sampling loop time step', 
         loss = loss + loss1     
 
     if opt.tgt_image != "":
-          loss_ = opt.ssimw * (1 - ssim(imT, imS)).mean() 
+          loss_ = opt.ssimw * (1 - ssim((imT+1)/2, (imS+1)/2)).mean() 
           losses.append(("Ssim loss",loss_.item())) 
           loss = loss + loss_    
 
