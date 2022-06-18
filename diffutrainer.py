@@ -14,7 +14,7 @@ parser.add_argument('--accum', type=int, default=10, help='number of iterations 
 parser.add_argument('--trainsteps', type=int, default=100000, help='number of iterations')
 parser.add_argument('--dir', type=str, default="train", help='folder for storing sampled images')
 parser.add_argument('--name', type=str, default="oma", help='basename for storing sampled images')
-#parser.add_argument('--show', action="store_true", help='show image in a window')
+parser.add_argument('--amp', action="store_true", help='use automatic mixed precision')
 parser.add_argument('--imageSize', type=int, default=512, help='image size')
 parser.add_argument('--batchSize', type=int, default=2, help='batch size')
 parser.add_argument('--saveEvery', type=int, default=100, help='image and model save frequency')
@@ -68,7 +68,7 @@ trainer = Trainer(
     train_num_steps = opt.trainsteps,         # total training steps
     gradient_accumulate_every = opt.accum,    # gradient accumulation steps
     ema_decay = 0.995,                # exponential moving average decay
-    amp = False,                       # turn on mixed precision training with apex
+    amp = opt.amp,                       # turn on mixed precision training with apex
     results_folder = opt.dir,
     nsamples = opt.nsamples,
     opts = opt
