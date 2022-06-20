@@ -51,6 +51,7 @@ parser.add_argument('--mults', type=int, nargs='*', default=[1, 1, 2, 2, 4, 8], 
 parser.add_argument('--weak', type=float, default=1., help='weaken init image')
 parser.add_argument('--model', type=str, default="", help='model architecture: unet0, unetok5, unet1,unetcn0')
 parser.add_argument('--gradv', action="store_true", help='another guidance technique')
+parser.add_argument('--showLosses', action="store_true", help='show losses')
 
 
 parser.add_argument('--contrast', type=float, default=1, help='contrast, 1 for neutral')
@@ -89,6 +90,8 @@ elif mtype == "unet0k5":
   from alt_models.Unet0k5 import Unet
 elif mtype == "unet1":
   from alt_models.Unet1 import Unet
+elif mtype == "unet2":
+  from alt_models.Unet2 import Unet    
 elif mtype == "unetcn0":
   from alt_models.UnetCN0 import Unet
 else:
@@ -163,6 +166,7 @@ if ifn != "":
   mul = opt.mul
 else:
    imT = torch.zeros(bs,3,opt.h,opt.w).normal_(0,1).cuda()
+   imT_ = imT.clone()
    mul = 1
 
 if opt.tgt_image != "":   
@@ -238,18 +242,19 @@ for i in tqdm(reversed(range(opt.skip, steps)), desc='sampling loop time step', 
           loss = loss + loss_    
 
     if loss != 0:
+        if opt.showLosses:
           if j % 50 == 0:
               out = ""
               for item in losses:
                 out += item[0] + ":" + str(item[1]) + " "
               print(out)
-          optimizer.zero_grad()   
+              
+        optimizer.zero_grad()   
                     
-          loss.backward()               # backprogation to find out how much the lats are off
-       
-          if opt.gradv:
+        loss.backward()               # backprogation to find out how much the lats are off
+        if opt.gradv:
               imT.grad *= pvar
-          optimizer.step()
+        optimizer.step()
 
     im = None
     if opt.saveiters or (opt.saveEvery > 0 and  j % opt.saveEvery == 0):

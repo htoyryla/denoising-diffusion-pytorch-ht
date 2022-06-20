@@ -36,6 +36,8 @@ elif mtype == "unet0k5":
   from alt_models.Unet0k5 import Unet
 elif mtype == "unet1":
   from alt_models.Unet1 import Unet
+elif mtype == "unet2":
+  from alt_models.Unet2 import Unet  
 elif mtype == "unetcn0":
   from alt_models.UnetCN0 import Unet
 else:
