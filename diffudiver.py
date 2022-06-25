@@ -2,6 +2,7 @@ from denoising_diffusion_pytorch import GaussianDiffusion
 import torch
 from torchvision.utils import save_image
 from torchvision import transforms
+import torch.nn.functional as F
 from PIL import Image
 from tqdm import tqdm
 import os
@@ -29,6 +30,8 @@ parser.add_argument('--ssimw', type=float, default=1., help='target image weight
 parser.add_argument('--textw', type=float, default=1., help='text weight')
 parser.add_argument('--tdecay', type=float, default=1., help='text weight decay')
 parser.add_argument('--imgpw', type=float, default=1., help='image prompt weight')
+parser.add_argument('--satd', type=float, default=1., help='saturation loss weight')
+parser.add_argument('--satw', type=float, default=0., help='saturation range')
 parser.add_argument('--steps', type=int, default=1000, help='diffusion steps')
 parser.add_argument('--skip', type=int, default=0, help='skip steps')
 parser.add_argument('--dir', type=str, default="out", help='base directory for storing images')
@@ -52,6 +55,8 @@ parser.add_argument('--weak', type=float, default=1., help='weaken init image')
 parser.add_argument('--model', type=str, default="", help='model architecture: unet0, unetok5, unet1,unetcn0')
 parser.add_argument('--gradv', action="store_true", help='another guidance technique')
 parser.add_argument('--showLosses', action="store_true", help='show losses')
+#parser.add_argument('--tanh', action="store_true", help='use tanh activation')
+parser.add_argument('--spher', action="store_true", help='use spherical loss')
 
 
 parser.add_argument('--contrast', type=float, default=1, help='contrast, 1 for neutral')
@@ -129,7 +134,8 @@ ifn = opt.image
 
 model = Unet(
     dim = 64,
-    dim_mults = opt.mults # (1, 2, 4, 8)
+    dim_mults = opt.mults # (1, 2, 4, 8),
+    #use_tanh = opt.tanh 
 ).cuda()
 
 
@@ -187,6 +193,13 @@ tx = clip.tokenize(text)                        # convert text to a list of toke
 txt_enc = perceptor.encode_text(tx.cuda()).detach()   # get sentence embedding for the tokens
 del tx
 
+def range_loss(x):
+    return (x - x.clamp(opt.satd, opt.satd)).pow(2).mean() #([1, 2, 3])
+
+def spherical_dist_loss(x, y):
+    x = F.normalize(x, dim=-1)
+    y = F.normalize(y, dim=-1)
+    return (x - y).norm(dim=-1).div(2).arcsin().pow(2).mul(2)     
 
 j = 0
 for i in tqdm(reversed(range(opt.skip, steps)), desc='sampling loop time step', total=steps): 
@@ -220,8 +233,11 @@ for i in tqdm(reversed(range(opt.skip, steps)), desc='sampling loop time step', 
   
         # we already have text embedding for the promt in txt_enc
         # so we can evaluate similarity
-     
-        loss = opt.textw*10*(1-torch.cosine_similarity(txt_enc, img_enc)).view(-1, bs).T.mean(1)
+    
+        if opt.spher:
+            loss = opt.textw * spherical_dist_loss(txt_enc, img_enc).mean()
+        else:     
+            loss = opt.textw*10*(1-torch.cosine_similarity(txt_enc, img_enc)).view(-1, bs).T.mean(1)
         losses.append(("Text loss",loss.item())) 
         if opt.tdecay < 1.:
             opt.textw = opt.tdecay * opt.textw
@@ -232,7 +248,10 @@ for i in tqdm(reversed(range(opt.skip, steps)), desc='sampling loop time step', 
             nimg = (imT.clip(-1, 1) + 1) / 2     
             nimg = cut(nimg, cutn=12, low=0.6, high=0.97, norm = cnorm)
             img_enc = perceptor.encode_image(nimg)
-        loss1 = opt.imgpw*10*(1-torch.cosine_similarity(imgp_enc, img_enc)).view(-1, bs).T.mean(1)  
+        if opt.spher:
+            loss1 = opt.textw * spherical_dist_loss(imgp_enc, img_enc).mean()   
+        else:     
+            loss1 = opt.imgpw*10*(1-torch.cosine_similarity(imgp_enc, img_enc)).view(-1, bs).T.mean(1)  
         losses.append(("Img prompt loss",loss1.item())) 
         loss = loss + loss1     
 
@@ -240,6 +259,11 @@ for i in tqdm(reversed(range(opt.skip, steps)), desc='sampling loop time step', 
           loss_ = opt.ssimw * (1 - ssim((imT+1)/2, (imS+1)/2)).mean() 
           losses.append(("Ssim loss",loss_.item())) 
           loss = loss + loss_    
+
+    sat_loss = opt.satw*range_loss(imT) #torch.abs(imT - imT.clamp(min=-opt.satd,max=opt.satd)).mean()
+    if sat_loss != 0:
+      losses.append(("Sat loss", sat_loss.item()))
+      loss = loss + sat_loss
 
     if loss != 0:
         if opt.showLosses:
