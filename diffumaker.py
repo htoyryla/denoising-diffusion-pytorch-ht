@@ -4,6 +4,7 @@ from denoising_diffusion_pytorch.denoising_diffusion_pytorch import noise_like
 import torch
 from torchvision.utils import save_image
 from torchvision import transforms
+import torch.nn.functional as F
 from PIL import Image
 from tqdm import tqdm
 import os
@@ -54,7 +55,7 @@ parser.add_argument('--weak', type=float, default=1., help='weaken init image')
 parser.add_argument('--model', type=str, default="", help='model architecture: unet0, unetok5, unet1,unetcn0')
 parser.add_argument('--gradv', action="store_true", help='another guidance technique')
 parser.add_argument('--showLosses', action="store_true", help='display losses')
-
+parser.add_argument('--spher', action="store_true", help='use spherical loss')
 
 parser.add_argument('--contrast', type=float, default=1, help='contrast, 1 for neutral')
 parser.add_argument('--brightness', type=float, default=0, help='brightness, 0 for neutral')
@@ -159,6 +160,13 @@ if opt.load != "":
   m = "ema" if opt.ema else "model"
   diffusion.load_state_dict(data[m], strict=False)
 
+diffusion.eval()
+
+def spherical_dist_loss(x, y):
+    x = F.normalize(x, dim=-1)
+    y = F.normalize(y, dim=-1)
+    return (x - y).norm(dim=-1).div(2).arcsin().pow(2).mul(2)     
+
 transform = transforms.Compose([transforms.Resize((opt.h, opt.w)), transforms.ToTensor()])
 
 if ifn != "":   
@@ -213,7 +221,9 @@ def cond_fn(x, t, x_s=None):
         # we already have text embedding for the promt in txt_enc
         # so we can evaluate similarity
      
-        loss = opt.textw*10*(1-torch.cosine_similarity(txt_enc, img_enc)).view(-1, bs).T.mean(1)
+        if opt.spher:
+            loss = opt.textw * spherical_dist_loss(txt_enc.detach(), img_enc).mean()
+        loss = opt.textw*10*(1-torch.cosine_similarity(txt_enc.detach(), img_enc)).view(-1, bs).T.mean(1)
         losses.append(("Text loss",loss.item())) 
         if opt.tdecay < 1.:
             opt.textw = opt.tdecay * opt.textw
@@ -234,7 +244,7 @@ def cond_fn(x, t, x_s=None):
           loss = loss + loss_    
   
     loss.backward()
-    x_grad = x.grad  
+    x_grad = x.grad.detach()  
     #x_grad = torch.autograd.grad(loss, x)[0]
     #print(x_grad.min(), x_grad.max())
     #print(x.grad)      
@@ -277,20 +287,21 @@ def p_sample_with_cond(d, x, t, cond_fn=None, clip_denoised=True, repeat_noise=F
         
         if cond_fn:
           grad, losses = cond_fn(x, t) #, x_start)
-          new_mean = model_mean + var * grad * opt.lr       
+          #print(grad.shape, grad.min(), grad.max())
+          new_mean = model_mean - var * grad * opt.lr       
           out = new_mean + nonzero_mask * (0.5 * model_log_variance).exp() * noise
         else:
           out = model_mean + nonzero_mask * (0.5 * model_log_variance).exp() * noise
           losses = []
          
-      
-        return out, losses 
+        
+        return out.detach(), losses 
 
 j = 0
 for i in tqdm(reversed(range(opt.skip, steps)), desc='sampling loop time step', total=steps): 
     t = torch.full((bs,), i // mul, device='cuda', dtype=torch.long).cuda()
     
-    imT, losses = p_sample_with_cond(diffusion, imT.clone().detach(), t, cond_fn=cond_fn)
+    imT, losses = p_sample_with_cond(diffusion, imT.detach(), t, cond_fn=cond_fn)
     
     im = None
     if opt.saveiters or (opt.saveEvery > 0 and  j % opt.saveEvery == 0):
