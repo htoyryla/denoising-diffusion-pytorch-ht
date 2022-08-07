@@ -52,6 +52,7 @@ parser.add_argument('--load', type=str, default="", help='path to pt file')
 parser.add_argument('--saveiters', action="store_true", help='')
 parser.add_argument('--mults', type=int, nargs='*', default=[1, 1, 2, 2, 4, 8], help='')
 parser.add_argument('--weak', type=float, default=1., help='weaken init image')
+parser.add_argument('--mid', type=float, default=0, help='weaken init image')
 parser.add_argument('--model', type=str, default="", help='model architecture: unet0, unetok5, unet1,unetcn0')
 parser.add_argument('--gradv', action="store_true", help='another guidance technique')
 parser.add_argument('--showLosses', action="store_true", help='display losses')
@@ -173,6 +174,9 @@ if ifn != "":
   imT_ = transform(Image.open(ifn).convert('RGB')).float().cuda().unsqueeze(0)
   imT_ = (imT_ * 2) - 1
   imT = imT_ * opt.weak
+  if opt.mid != 0:
+      imT += opt.mid
+      imT = imT.clamp(-1,1)
   mul = opt.mul
 else:
    imT = torch.zeros(bs,3,opt.h,opt.w).normal_(0,1).cuda()
