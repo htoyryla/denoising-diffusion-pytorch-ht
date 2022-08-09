@@ -72,3 +72,17 @@ python diffudiver.py --text prompt_for_clip --dir output_folder --name basename_
 ```
 
 There is also an experimental option to start from a noised seed image instead of pure noise. Use --image for the seed image and set --mul slightly above 1. You can also "weaken" the seed image using values of --weak less than 1.   
+
+## Better CLIP guidance
+
+Diffudiver is not ideal for CLIP guidance, it needs less memory than proper guidance, but image quality can be poor unless one finds just the correct balance between the different weights.
+
+Diffumaker has now been added and it does proper guidance.
+
+Example
+
+```
+python diffumaker.py --text "an abstract painting of an alley in an old town" --lr 500 --dir k022a --name mq314y --textw 5 --cutn 48 --low 0.4  --imageSize 1024 --modelSize 512 --image path_to_init_image --tgt_image path_to_target_image   --saveEvery 50 --saveAfter 50 --load path_to_trained_model --model unet1 --mults 1 1 2 2 4 4 8  --ssimw 100  --ema --showLosses --spher  --skip 20 --weak 0.45 --mul 1.3 --mid 0
+```
+
+Options weak, mul and mid help in tuning the levels of init image and noise. This is a bit complex topic, so better return to it in discussions.
