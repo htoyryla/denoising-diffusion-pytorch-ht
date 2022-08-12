@@ -27,6 +27,15 @@ Some early results, using datasets of a few hundred images, selected according t
 <img src="https://user-images.githubusercontent.com/15064373/163940103-836b4e52-57e5-4375-b292-3d538f1e3f6d.jpeg" width="360"></img>
 </p>
 
+## Important
+
+Do not do 
+```
+pip install denoising_diffusion_pytorch 
+```
+
+as it will install lucidrains' version. Minidiffusion uses its own version directly from the subfolder. 
+
 ## How to train
 
 Using unetcn0 and unet0 I have been able to train useful models with as few as 250 images, using 512px imagesize and 6+6 layers unet.
