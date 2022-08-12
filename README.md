@@ -95,3 +95,23 @@ python diffumaker.py --text "an abstract painting of an alley in an old town" --
 ```
 
 Options weak, mul and mid help in tuning the levels of init image and noise. This is a bit complex topic, so better return to it in discussions.
+
+## Tiled generation
+
+With tilemaker, one can take a larger image and process it tile by tile.
+
+Example:
+
+```
+python tilemaker.py --text "large abstract geometric shapes painted on a canvas" --textw 25  --image ~/Pictures/m09-\ 216.jpg --tgt_image init --dir tl8/  --name t1d --lr 500  --ssimw 150 --skip 0  --ema --w 2048 --h 2048 --modelSize 512 --mults 1 1 2 2 4 4 8 --model unet1 --saveEvery 50 --saveAfter 50  --showLosses --load /work5/mdif/paikatun1/model-774.pt --unsharp 0.9  --mul 1.3 --weak 0.3 --savelatest --grid --tilemin 512 --cutn 8 --low 0.7 --high 0.98
+```
+
+Here it is essential to set --h and --w according to the canvas size (i.e. desired output size), --tilemin to the size of a single tile and --grid to specify that we want the tiles arranged neatly in a grid.
+
+<img src="https://user-images.githubusercontent.com/15064373/184379590-8c73bcad-44d1-4647-8599-9a710a51c531.jpg" width="480"></img>
+
+Alternatively one can use randomly placed, overlapping tiles of varying sizes by setting --tilemin and --tilemax to minimum and maximum tile size, -tiles to total number of tiles and leaving --grid out.
+
+<img src="https://user-images.githubusercontent.com/15064373/184380178-c3a3b22c-15cd-46e8-97a5-28d012c904c4.jpeg" width="480"></img>
+
+
