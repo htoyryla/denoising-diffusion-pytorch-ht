@@ -5,7 +5,8 @@ Based on the excellent and clear codebase by @lucidrains
 Let's call this miniDiffusion.
 
 This is an experimental project with emphasis on visual work. I would not mind if somebody trained a really cool model,
-but in general it is best to try in small scale. Even 200 images and a few hours of training. Select training images based on visual features (how they look) instead of semantics (what things there are). This is not a classification project. See discussions.
+but in general it is best to try in small scale. Even 200 images and a few hours of training. Select training images based on visual features (how they look) instead of semantics (what things there are). This is not a classification project. 
+See [discussions](https://github.com/htoyryla/minidiffusion/discussions) .
 
 Model architectures unetcn0 (Unet with convnext) and unet0 (unet with resnet) are known to work. Both copied from commit history of @lucidrains repo
 
