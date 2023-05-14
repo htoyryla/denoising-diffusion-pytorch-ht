@@ -10,6 +10,8 @@ See [discussions](https://github.com/htoyryla/minidiffusion/discussions) .
 
 Model architectures unetcn0 (Unet with convnext) and unet0 (unet with resnet) are known to work. Both copied from commit history of @lucidrains repo
 
+I am currently using unet1 exclusively, as it helps to use same architecture and dimensions in different models, to be able to interpolate them.
+
 My intention is
 
 * add scripts for convenient training and image generation / transformation
@@ -125,3 +127,6 @@ Alternatively one can use randomly placed, overlapping tiles of varying sizes by
 ---- instructions coming real soon now ------
 
 
+## Model interpolation
+
+---- instructions coming real soon now ------
