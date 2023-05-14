@@ -39,10 +39,11 @@ as it will install lucidrains' version. Minidiffusion uses its own version direc
 
 ## How to train
 
-Using unetcn0 and unet0 I have been able to train useful models with as few as 250 images, using 512px imagesize and 6+6 layers unet.
+I have been able to train useful models with as few as 250 images, using 512px imagesize. You might want to start with a higher lr and
+later on stop and restart with a lower lr.
 
 ```
-python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000 --accum 10 --dir output_folder --imageSize 512 --batchSize 2 --saveEvery 100 --nsamples 2 --mults 1 1 2 2 4 8 --model unet0
+python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000 --accum 10 --dir output_folder --imageSize 512 --batchSize 2 --saveEvery 100 --nsamples 2 --mults 1 1 2 2 4 4 8 --model unet1
 
 --lr learning rate
 --steps diffusion steps
@@ -55,9 +56,11 @@ python diffutrainer.py --images path_to_your_image_folder --lr 5e-5 --steps 1000
 --mults multipliers affecting number of feature maps per level, use larger numbers for the later, more abstract levels
         number of multipliers also determines depth of the model, good rule is to  have 5 or 6 numbers of 256 and 6 or 7 numbers for 512
         too few layers will make model fail to perceive the image as a whole
---model unetcn0 (selects which model architecture is used, to be explained later, this one at least works)
+--model unet1 (selects which model architecture is used, to be explained later, this one at least works)
 ```
 ## How to sample
+
+DEPRECATED. Use diffudimmer, diffumakerz or diffumaker instead.
 
 Currently supports CLIP guidance and use of target image. Use textw for tuning how much effect CLIP has and ssimw to guide target image weight. SSIM is used for target image loss.
 
@@ -97,6 +100,8 @@ python diffumaker.py --text "an abstract painting of an alley in an old town" --
 
 Options weak, mul and mid help in tuning the levels of init image and noise. This is a bit complex topic, so better return to it in discussions.
 
+Diffumakerz is a newer version with improved guidance. Instructions coming real soon now.
+
 ## Tiled generation
 
 With tilemaker, one can take a larger image and process it tile by tile.
@@ -114,5 +119,9 @@ Here it is essential to set --h and --w according to the canvas size (i.e. desir
 Alternatively one can use randomly placed, overlapping tiles of varying sizes by setting --tilemin and --tilemax to minimum and maximum tile size, -tiles to total number of tiles and leaving --grid out.
 
 <img src="https://user-images.githubusercontent.com/15064373/184380178-c3a3b22c-15cd-46e8-97a5-28d012c904c4.jpeg" width="480"></img>
+
+## Diffudimmer
+
+---- instructions coming real soon now ------
 
 
