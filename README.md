@@ -1,5 +1,8 @@
 ## Experimenting with image making using denoising diffusion
 
+THIS PROJECT HAS BEEN DISCONTINUED, FOR A NEWER VERSION SEE https://github.com/htoyryla/urdiffusion
+
+
 Based on the excellent and clear codebase by @lucidrains
 
 Let's call this miniDiffusion.
